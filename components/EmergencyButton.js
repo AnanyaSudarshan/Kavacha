@@ -7,7 +7,7 @@ import { Alert, Pressable, StyleSheet, Text } from "react-native";
  */
 export default function EmergencyButton({ navigation }) {
   const goToEmergency = () => {
-    // If you later add logic like permissions / location sharing, do it here.
+    // TODO: Remove test params when backend is ready
     navigation.navigate("Emergency");
   };
 

@@ -2,56 +2,78 @@ import React from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import contacts from "../data/contacts";
 
-// Placeholder emergency screen (later: call, SMS, share live location, etc).
-export default function EmergencyScreen({ navigation, riskLevel = "none" }) {
-  // --- Risk-based content (data + UI) ---
-  // Pick one contact per type from the static dataset.
-  const policeContact = contacts.find((c) => c.type === "police");
-  const consultancyContact = contacts.find((c) => c.type === "consultancy");
+// MOCK TEST (paste into navigation call to test):
+// navigation.navigate("Emergency", {
+//   risk_level: "high",
+//   contact_details: { name: "Police Control Room", phone: "100", description: "24/7 emergency" },
+//   next_steps: ["Call emergency now and speak clearly.", "Move to a safe public area.", "Share your location with someone you trust."]
+// })
 
+export default function EmergencyScreen({ navigation, route }) {
+
+  // Read risk data from route.params (mock for now, real API later)
+  const {
+    risk_level = "none",
+    contact_details = null,
+    next_steps = [],
+  } = route?.params ?? {};
+
+  // TODO: Replace above with real API call when backend is ready.
+  // Example:
+  // const response = await fetch("https://your-api.com/risk?user_id=123");
+  // const { risk_level, contact_details, next_steps } = await response.json();
+
+  // Fallback contacts from local data if no contact_details passed via params
+  const policeContact = contact_details ?? contacts.find((c) => c.type === "police");
+  const consultancyContact = contact_details ?? contacts.find((c) => c.type === "consultancy");
+
+  // Risk configuration — defines card style, title, subtitle, contact, steps
   const riskConfig = {
     high: {
       cardStyle: [styles.riskCard, styles.riskCardHigh],
-      title: "High risk",
-      subtitle: "Call for help and move to a safer place if you can.",
+      title: "⚠️ High Risk",
+      subtitle: "Call for help in case of scam",
       contact: policeContact,
-      steps: [
+      // Use steps from params if available, else use defaults
+      steps: next_steps.length > 0 ? next_steps : [
         "Call emergency now and speak clearly.",
-        "Go to a well-lit/public area and stay with others.",
-        "Share your location with a trusted person.",
+        "Give the police correct details about the situation.",
+        "Do not panic.",
       ],
     },
     moderate: {
       cardStyle: [styles.riskCard, styles.riskCardModerate],
-      title: "Moderate risk",
+      title: "⚡ Moderate Risk",
       subtitle: "Get support and have a quick safety plan ready.",
       contact: consultancyContact,
-      steps: [
+      steps: next_steps.length > 0 ? next_steps : [
         "Call a helpline for guidance and support.",
-        "Tell a trusted person where you are.",
-        "Keep your phone charged and stay alert.",
+        "Tell a trusted person what happened.",
+        "Do not panic.",
       ],
     },
     none: {
       cardStyle: [styles.riskCard, styles.riskCardNone],
-      title: "No immediate risk",
-      subtitle: "You’re currently marked as safe.",
+      title: "✅ No Immediate Risk",
+      subtitle: "You're phone and data are safe",
       contact: null,
       steps: [],
     },
   };
 
-  const currentRisk = riskConfig[riskLevel] ?? riskConfig.none;
+  // Pick the right config, fallback to "none" if unknown value
+  const currentRisk = riskConfig[risk_level] ?? riskConfig.none;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* Risk card section (changes based on `riskLevel` prop) */}
+
+        {/* Risk card — changes color and content based on risk_level */}
         <View style={currentRisk.cardStyle}>
           <Text style={styles.riskTitle}>{currentRisk.title}</Text>
           <Text style={styles.riskSubtitle}>{currentRisk.subtitle}</Text>
 
-          {/* Contact section (shown only for high/moderate) */}
+          {/* Contact box — shown only for high and moderate risk */}
           {currentRisk.contact ? (
             <View style={styles.riskContactBox}>
               <Text style={styles.riskSectionLabel}>Suggested contact</Text>
@@ -63,30 +85,32 @@ export default function EmergencyScreen({ navigation, riskLevel = "none" }) {
             </View>
           ) : null}
 
-          {/* Next steps section (numbered list, max 3) */}
+          {/* Next steps — numbered list, max 3 */}
           {currentRisk.steps.length > 0 ? (
             <View style={styles.riskStepsBox}>
               <Text style={styles.riskSectionLabel}>Next steps</Text>
               {currentRisk.steps.slice(0, 3).map((step, idx) => (
-                <Text key={`${riskLevel}-step-${idx}`} style={styles.riskStepText}>
+                <Text key={`${risk_level}-step-${idx}`} style={styles.riskStepText}>
                   {idx + 1}. {step}
                 </Text>
               ))}
             </View>
           ) : (
+            // Shown only for "none" risk
             <Text style={styles.riskSafeNote}>
               Keep your trusted contacts updated and stay aware of your surroundings.
             </Text>
           )}
         </View>
 
-        {/* Bottom navigation button (existing) */}
+        {/* Back to Home button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate("Home")}
         >
           <Text style={styles.backButtonText}>Back to Home</Text>
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );
@@ -199,4 +223,3 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
-
