@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Language selection screen (simple + demo-ready).
 export default function LanguageScreen({ navigation }) {
@@ -8,8 +8,24 @@ export default function LanguageScreen({ navigation }) {
     navigation.replace("Home", { language });
   };
 
+  const onRepeatInstructions = () => {
+    Alert.alert(
+      "Instructions",
+      "Step 1: Select your language.\nStep 2: On Home, paste message/OTP/link.\nStep 3: Press Analyze."
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
+      <TouchableOpacity
+        style={styles.repeatButtonTopLeft}
+        onPress={onRepeatInstructions}
+        accessibilityRole="button"
+        accessibilityLabel="Repeat instructions"
+      >
+        <Text style={styles.repeatButtonTopLeftText}>Press 0</Text>
+      </TouchableOpacity>
+
       <View style={styles.container}>
         <Text style={styles.title}>Kavacha</Text>
         <Text style={styles.subtitle}>Select your language</Text>
@@ -116,6 +132,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#6B7280",
     fontSize: 13,
+  },
+  repeatButtonTopLeft: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    zIndex: 10,
+    backgroundColor: "#111827",
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  repeatButtonTopLeftText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center",
   },
 });
 

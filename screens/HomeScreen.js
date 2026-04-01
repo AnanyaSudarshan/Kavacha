@@ -126,15 +126,17 @@ const styles = StyleSheet.create({
   changeLanguageButton: {
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
-    paddingVertical: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     alignItems: "center",
-    borderWidth: 2,
+    alignSelf: "center",
+    borderWidth: 1,
     borderColor: "#0B5FFF",
     marginBottom: 12,
   },
   changeLanguageButtonText: {
     color: "#0B5FFF",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "900",
   },
   card: {
