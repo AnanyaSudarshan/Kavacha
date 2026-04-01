@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import EmergencyButton from "../components/EmergencyButton";
 
 // Home screen: simple input + big buttons (demo-ready).
 export default function HomeScreen({ navigation, route }) {
@@ -9,12 +10,10 @@ export default function HomeScreen({ navigation, route }) {
   const canAnalyze = useMemo(() => inputText.trim().length > 0, [inputText]);
 
   const onUploadPlaceholder = () => {
-    // Placeholder: later you can connect Expo DocumentPicker / ImagePicker here.
     Alert.alert("Upload", "File upload is a placeholder for now.");
   };
 
   const onAnalyze = () => {
-    // Pass the typed text forward for later API integration.
     navigation.navigate("Result", { language, inputText: inputText.trim() });
   };
 
@@ -26,14 +25,39 @@ export default function HomeScreen({ navigation, route }) {
   };
 
   const onChangeLanguage = () => {
-    // Go back to LanguageScreen so the user can pick again.
     navigation.navigate("Language");
+  };
+
+  // Auto detect — placeholder for now, later will auto read clipboard or camera
+  const onAutoDetect = () => {
+    Alert.alert("Auto Detect", "Placeholder: later this will auto-read clipboard or scan image.");
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Text style={styles.title}>Kavacha</Text>
+
+        {/* Top row: title + auto detect + SOS button */}
+        <View style={styles.topRow}>
+          <Text style={styles.title}>Kavacha</Text>
+
+          {/* Right side buttons — Auto Detect and SOS side by side */}
+          <View style={styles.topRightButtons}>
+            {/* Auto detect button — left of SOS */}
+            <TouchableOpacity
+              style={styles.autoDetectButton}
+              onPress={onAutoDetect}
+              accessibilityRole="button"
+              accessibilityLabel="Auto detect"
+            >
+              <Text style={styles.autoDetectButtonText}>Auto</Text>
+            </TouchableOpacity>
+
+            {/* SOS button — far right */}
+            <EmergencyButton navigation={navigation} />
+          </View>
+        </View>
+
         <Text style={styles.subtitle}>Selected language: {language}</Text>
 
         <TouchableOpacity
@@ -95,6 +119,7 @@ export default function HomeScreen({ navigation, route }) {
         >
           <Text style={styles.repeatButtonText}>Press 0 to hear instructions again</Text>
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );
@@ -110,12 +135,39 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: "center",
   },
+  // Top row holds title and buttons side by side
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
   title: {
     fontSize: 30,
     fontWeight: "900",
     color: "#111827",
-    textAlign: "center",
-    marginBottom: 6,
+  },
+  // Wrapper for auto detect + SOS buttons
+  topRightButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  // Auto detect button — green, same shape as SOS
+  autoDetectButton: {
+    backgroundColor: "#059669",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  autoDetectButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 14,
@@ -238,4 +290,3 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-

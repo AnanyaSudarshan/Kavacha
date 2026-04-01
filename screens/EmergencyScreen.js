@@ -1,12 +1,12 @@
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Linking, Alert } from "react-native";
 import contacts from "../data/contacts";
 
 // MOCK TEST (paste into navigation call to test):
 // navigation.navigate("Emergency", {
 //   risk_level: "high",
 //   contact_details: { name: "Police Control Room", phone: "100", description: "24/7 emergency" },
-//   next_steps: ["Call emergency now and speak clearly.", "Move to a safe public area.", "Share your location with someone you trust."]
+//   next_steps: ["Call 112 immediately and stay on the line.", "Move to a crowded or well-lit place nearby.", "Tell someone you trust where you are right now.", "Do not share any money or OTP with anyone."]
 // })
 
 export default function EmergencyScreen({ navigation, route }) {
@@ -27,35 +27,55 @@ export default function EmergencyScreen({ navigation, route }) {
   const policeContact = contact_details ?? contacts.find((c) => c.type === "police");
   const consultancyContact = contact_details ?? contacts.find((c) => c.type === "consultancy");
 
+  // Call handler — opens phone dialer with the contact's number
+  const onCall = (phone) => {
+    const phoneUrl = `tel:${phone}`;
+    Linking.canOpenURL(phoneUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(phoneUrl);
+        } else {
+          Alert.alert("Error", "Phone calls are not supported on this device.");
+        }
+      })
+      .catch(() => {
+        Alert.alert("Error", "Something went wrong. Please try again.");
+      });
+  };
+
   // Risk configuration — defines card style, title, subtitle, contact, steps
   const riskConfig = {
     high: {
       cardStyle: [styles.riskCard, styles.riskCardHigh],
+      callButtonStyle: styles.callButtonHigh,
       title: "⚠️ High Risk",
-      subtitle: "Call for help in case of scam",
+      subtitle: "You may be in danger. Act immediately.",
       contact: policeContact,
-      // Use steps from params if available, else use defaults
       steps: next_steps.length > 0 ? next_steps : [
-        "Call emergency now and speak clearly.",
-        "Give the police correct details about the situation.",
-        "Do not panic.",
+        "Call 112 immediately and stay on the line.",
+        "Move to a crowded or well-lit place nearby.",
+        "Tell someone you trust where you are right now.",
+        "Do not share any money or OTP with anyone.",
       ],
     },
     moderate: {
       cardStyle: [styles.riskCard, styles.riskCardModerate],
+      callButtonStyle: styles.callButtonModerate,
       title: "⚡ Moderate Risk",
-      subtitle: "Get support and have a quick safety plan ready.",
+      subtitle: "Something suspicious was detected. Stay alert.",
       contact: consultancyContact,
       steps: next_steps.length > 0 ? next_steps : [
-        "Call a helpline for guidance and support.",
-        "Tell a trusted person what happened.",
-        "Do not panic.",
+        "Call helpline 181 and explain what happened.",
+        "Stop all calls or messages from unknown numbers.",
+        "Tell a family member or friend about the situation.",
+        "Save all proof — screenshots, call logs, messages.",
       ],
     },
     none: {
       cardStyle: [styles.riskCard, styles.riskCardNone],
+      callButtonStyle: null,
       title: "✅ No Immediate Risk",
-      subtitle: "You're phone and data are safe",
+      subtitle: "Your phone and data are safe right now.",
       contact: null,
       steps: [],
     },
@@ -82,14 +102,27 @@ export default function EmergencyScreen({ navigation, route }) {
               <Text style={styles.riskContactDescription}>
                 {currentRisk.contact.description}
               </Text>
+
+              {/* Call button — dials the contact number directly */}
+              <TouchableOpacity
+                style={[styles.callButton, currentRisk.callButtonStyle]}
+                onPress={() => onCall(currentRisk.contact.phone)}
+                accessibilityRole="button"
+                accessibilityLabel={`Call ${currentRisk.contact.name}`}
+              >
+                <Text style={styles.callButtonText}>
+                  📞 Call {currentRisk.contact.phone}
+                </Text>
+              </TouchableOpacity>
+
             </View>
           ) : null}
 
-          {/* Next steps — numbered list, max 3 */}
+          {/* Next steps — numbered list, max 4 */}
           {currentRisk.steps.length > 0 ? (
             <View style={styles.riskStepsBox}>
               <Text style={styles.riskSectionLabel}>Next steps</Text>
-              {currentRisk.steps.slice(0, 3).map((step, idx) => (
+              {currentRisk.steps.slice(0, 4).map((step, idx) => (
                 <Text key={`${risk_level}-step-${idx}`} style={styles.riskStepText}>
                   {idx + 1}. {step}
                 </Text>
@@ -98,7 +131,7 @@ export default function EmergencyScreen({ navigation, route }) {
           ) : (
             // Shown only for "none" risk
             <Text style={styles.riskSafeNote}>
-              Keep your trusted contacts updated and stay aware of your surroundings.
+              Never share OTP or bank details with anyone. If something feels wrong, press SOS immediately.
             </Text>
           )}
         </View>
@@ -189,6 +222,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#4B5563",
     lineHeight: 18,
+    marginBottom: 10,
+  },
+  // Call button — red for high risk
+  callButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  callButtonHigh: {
+    backgroundColor: "#D32F2F",
+  },
+  // Call button — yellow/dark for moderate risk
+  callButtonModerate: {
+    backgroundColor: "#B45309",
+  },
+  callButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
   },
   riskStepsBox: {
     backgroundColor: "#FFFFFF",

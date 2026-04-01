@@ -7,8 +7,11 @@ import { Alert, Pressable, StyleSheet, Text } from "react-native";
  */
 export default function EmergencyButton({ navigation }) {
   const goToEmergency = () => {
-    // TODO: Remove test params when backend is ready
-    navigation.navigate("Emergency");
+    navigation.navigate("Emergency", {
+      risk_level: "high",
+      contact_details: { name: "Police Control Room", phone: "100", description: "24/7 emergency" },
+      next_steps: ["Call 112 immediately and stay on the line.", "Move to a crowded or well-lit place nearby.", "Tell someone you trust where you are right now.", "Do not share any money or OTP with anyone."]
+    });
   };
 
   const onLongPress = () => {
