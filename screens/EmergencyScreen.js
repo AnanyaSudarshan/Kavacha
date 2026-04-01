@@ -1,46 +1,86 @@
 import React from "react";
-import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import contacts from "../data/contacts";
 
 // Placeholder emergency screen (later: call, SMS, share live location, etc).
-export default function EmergencyScreen({ navigation }) {
-  const onCall = () => {
-    // Placeholder action: show an alert instead of placing a real call.
-    Alert.alert("Emergency Call", "This is a placeholder. Later we can call 112/100.");
+export default function EmergencyScreen({ navigation, riskLevel = "none" }) {
+  // --- Risk-based content (data + UI) ---
+  // Pick one contact per type from the static dataset.
+  const policeContact = contacts.find((c) => c.type === "police");
+  const consultancyContact = contacts.find((c) => c.type === "consultancy");
+
+  const riskConfig = {
+    high: {
+      cardStyle: [styles.riskCard, styles.riskCardHigh],
+      title: "High risk",
+      subtitle: "Call for help and move to a safer place if you can.",
+      contact: policeContact,
+      steps: [
+        "Call emergency now and speak clearly.",
+        "Go to a well-lit/public area and stay with others.",
+        "Share your location with a trusted person.",
+      ],
+    },
+    moderate: {
+      cardStyle: [styles.riskCard, styles.riskCardModerate],
+      title: "Moderate risk",
+      subtitle: "Get support and have a quick safety plan ready.",
+      contact: consultancyContact,
+      steps: [
+        "Call a helpline for guidance and support.",
+        "Tell a trusted person where you are.",
+        "Keep your phone charged and stay alert.",
+      ],
+    },
+    none: {
+      cardStyle: [styles.riskCard, styles.riskCardNone],
+      title: "No immediate risk",
+      subtitle: "You’re currently marked as safe.",
+      contact: null,
+      steps: [],
+    },
   };
 
-  const onShareLocation = () => {
-    Alert.alert("Share Location", "Placeholder: later we will share live location.");
-  };
-
-  const onTrustedContacts = () => {
-    Alert.alert("Trusted Contacts", "Placeholder: later we will manage contacts.");
-  };
+  const currentRisk = riskConfig[riskLevel] ?? riskConfig.none;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <View style={styles.headerBox}>
-          <Text style={styles.title}>Emergency</Text>
-          <Text style={styles.subtitle}>
-            If you are in danger, use these options. (Placeholder screen)
-          </Text>
+        {/* Risk card section (changes based on `riskLevel` prop) */}
+        <View style={currentRisk.cardStyle}>
+          <Text style={styles.riskTitle}>{currentRisk.title}</Text>
+          <Text style={styles.riskSubtitle}>{currentRisk.subtitle}</Text>
+
+          {/* Contact section (shown only for high/moderate) */}
+          {currentRisk.contact ? (
+            <View style={styles.riskContactBox}>
+              <Text style={styles.riskSectionLabel}>Suggested contact</Text>
+              <Text style={styles.riskContactName}>{currentRisk.contact.name}</Text>
+              <Text style={styles.riskContactPhone}>{currentRisk.contact.phone}</Text>
+              <Text style={styles.riskContactDescription}>
+                {currentRisk.contact.description}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Next steps section (numbered list, max 3) */}
+          {currentRisk.steps.length > 0 ? (
+            <View style={styles.riskStepsBox}>
+              <Text style={styles.riskSectionLabel}>Next steps</Text>
+              {currentRisk.steps.slice(0, 3).map((step, idx) => (
+                <Text key={`${riskLevel}-step-${idx}`} style={styles.riskStepText}>
+                  {idx + 1}. {step}
+                </Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.riskSafeNote}>
+              Keep your trusted contacts updated and stay aware of your surroundings.
+            </Text>
+          )}
         </View>
 
-        <TouchableOpacity style={styles.dangerButton} onPress={onCall}>
-          <Text style={styles.dangerButtonText}>CALL EMERGENCY</Text>
-          <Text style={styles.dangerHint}>Example: 112 / police / ambulance</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={onShareLocation}>
-          <Text style={styles.actionButtonText}>Share My Location</Text>
-          <Text style={styles.actionHint}>Send location to trusted contacts</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={onTrustedContacts}>
-          <Text style={styles.actionButtonText}>Trusted Contacts</Text>
-          <Text style={styles.actionHint}>Add or edit emergency contacts</Text>
-        </TouchableOpacity>
-
+        {/* Bottom navigation button (existing) */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.navigate("Home")}
@@ -60,70 +100,91 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    justifyContent: "center",
+    paddingTop: 16,
+    justifyContent: "flex-start",
   },
-  headerBox: {
-    backgroundColor: "#FFFFFF",
+  riskCard: {
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#FECACA",
-    marginBottom: 14,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#7F1D1D",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#7F1D1D",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  dangerButton: {
-    backgroundColor: "#D32F2F",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
     marginBottom: 12,
   },
-  dangerButtonText: {
-    color: "#FFFFFF",
-    fontSize: 20,
+  riskCardHigh: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FCA5A5",
+  },
+  riskCardModerate: {
+    backgroundColor: "#FFFBEB",
+    borderColor: "#FCD34D",
+  },
+  riskCardNone: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#6EE7B7",
+  },
+  riskTitle: {
+    fontSize: 22,
     fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  dangerHint: {
-    color: "#FFE4E6",
-    fontSize: 13,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  actionButton: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: "#FECACA",
-    marginBottom: 12,
-  },
-  actionButtonText: {
     color: "#111827",
+    marginBottom: 6,
+  },
+  riskSubtitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#374151",
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  riskSectionLabel: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 6,
+  },
+  riskContactBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 10,
+  },
+  riskContactName: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111827",
+    marginBottom: 2,
+  },
+  riskContactPhone: {
     fontSize: 18,
     fontWeight: "900",
-    marginBottom: 6,
-    textAlign: "center",
+    color: "#111827",
+    marginBottom: 4,
   },
-  actionHint: {
-    color: "#6B7280",
+  riskContactDescription: {
     fontSize: 13,
     fontWeight: "600",
-    textAlign: "center",
+    color: "#4B5563",
+    lineHeight: 18,
+  },
+  riskStepsBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  riskStepText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    lineHeight: 22,
+    marginBottom: 6,
+  },
+  riskSafeNote: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#065F46",
+    lineHeight: 20,
   },
   backButton: {
     backgroundColor: "#111827",
