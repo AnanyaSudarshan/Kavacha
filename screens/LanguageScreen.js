@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useLanguage } from "../src/context/LanguageContext";
+import { playLanguageSelection } from "../src/utils/playAudio";
 
 // Language selection screen (simple + demo-ready).
 export default function LanguageScreen({ navigation }) {
+  const { selectedLanguage, setSelectedLanguage } = useLanguage();
   const onSelectLanguage = (language) => {
-    // Pass the chosen language to HomeScreen.
-    navigation.replace("Home", { language });
+    setSelectedLanguage(language);
+    navigation.navigate("Home");
   };
 
   const onRepeatInstructions = () => {
@@ -13,6 +16,27 @@ export default function LanguageScreen({ navigation }) {
       "Instructions",
       "Step 1: Select your language.\nStep 2: On Home, paste message/OTP/link.\nStep 3: Press Analyze."
     );
+  };
+
+  useEffect(() => {
+    const cancelRef = { cancelled: false };
+    const startPlayback = async () => {
+      // Small delay helps ensure screen is mounted before playback starts.
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await playLanguageSelection(cancelRef);
+    };
+    startPlayback();
+    return () => {
+      cancelRef.cancelled = true;
+    };
+  }, []);
+
+  const changeLanguageLabel = {
+    kannada: "ಭಾಷೆ ಬದಲಿಸಿ",
+    hindi: "भाषा बदलें",
+    telugu: "భాష మార్చండి",
+    tamil: "மொழி மாற்று",
+    english: "Change Language",
   };
 
   return (
@@ -31,16 +55,29 @@ export default function LanguageScreen({ navigation }) {
         <Text style={styles.subtitle}>Select your language</Text>
 
         <View style={styles.list}>
-          <LanguageButton number={1} label="Kannada" onPress={() => onSelectLanguage("Kannada")} />
-          <LanguageButton number={2} label="Hindi" onPress={() => onSelectLanguage("Hindi")} />
-          <LanguageButton number={3} label="Telugu" onPress={() => onSelectLanguage("Telugu")} />
-          <LanguageButton number={4} label="Tamil" onPress={() => onSelectLanguage("Tamil")} />
-          <LanguageButton number={5} label="English" onPress={() => onSelectLanguage("English")} />
+          <LanguageButton number={1} label="Kannada" onPress={() => onSelectLanguage("kannada")} />
+          <LanguageButton number={2} label="Hindi" onPress={() => onSelectLanguage("hindi")} />
+          <LanguageButton number={3} label="Telugu" onPress={() => onSelectLanguage("telugu")} />
+          <LanguageButton number={4} label="Tamil" onPress={() => onSelectLanguage("tamil")} />
+          <LanguageButton number={5} label="English" onPress={() => onSelectLanguage("english")} />
         </View>
 
         <Text style={styles.note}>
           Tip: Tap a language to continue to the home screen.
         </Text>
+        <TouchableOpacity
+          style={styles.changeLanguageButton}
+          onPress={() => {
+            const cancelRef = { cancelled: false };
+            playLanguageSelection(cancelRef);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Change language"
+        >
+          <Text style={styles.changeLanguageButtonText}>
+            {changeLanguageLabel[selectedLanguage]}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -132,6 +169,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#6B7280",
     fontSize: 13,
+  },
+  changeLanguageButton: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "#0B5FFF",
+    marginTop: 12,
+  },
+  changeLanguageButtonText: {
+    color: "#0B5FFF",
+    fontSize: 14,
+    fontWeight: "900",
   },
   repeatButtonTopLeft: {
     position: "absolute",

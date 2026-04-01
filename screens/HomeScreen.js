@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useLanguage } from "../src/context/LanguageContext";
+import { playVoiceForLanguage } from "../src/utils/playAudio";
 
 // Home screen: simple input + big buttons (demo-ready).
 export default function HomeScreen({ navigation, route }) {
-  const language = route?.params?.language ?? "English";
+  const { selectedLanguage, languageLabels } = useLanguage();
   const [inputText, setInputText] = useState("");
 
   const canAnalyze = useMemo(() => inputText.trim().length > 0, [inputText]);
@@ -15,7 +17,7 @@ export default function HomeScreen({ navigation, route }) {
 
   const onAnalyze = () => {
     // Pass the typed text forward for later API integration.
-    navigation.navigate("Result", { language, inputText: inputText.trim() });
+    navigation.navigate("Result", { language: languageLabels[selectedLanguage], inputText: inputText.trim() });
   };
 
   const onRepeatInstructions = () => {
@@ -30,11 +32,19 @@ export default function HomeScreen({ navigation, route }) {
     navigation.navigate("Language");
   };
 
+  useEffect(() => {
+    const cancelRef = { cancelled: false };
+    playVoiceForLanguage(selectedLanguage, cancelRef);
+    return () => {
+      cancelRef.cancelled = true;
+    };
+  }, [selectedLanguage]);
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <Text style={styles.title}>Kavacha</Text>
-        <Text style={styles.subtitle}>Selected language: {language}</Text>
+        <Text style={styles.subtitle}>Selected language: {languageLabels[selectedLanguage]}</Text>
 
         <TouchableOpacity
           style={styles.changeLanguageButton}
